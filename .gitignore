@@ -38,3 +38,6 @@ temp*.png
 output
 assets
 .idea
+.pth
+*.pt
+*.pth
