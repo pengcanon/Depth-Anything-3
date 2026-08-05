@@ -65,6 +65,7 @@ def classify_features(
     min_conf:       float = 0.05,
     contact_thresh: float = 0.15,        # absolute depth units
     close_thresh:   float = 0.40,        # absolute depth units
+    floor_normal_z: float | None = None,
 ) -> list[FeatureResult]:
     """
     Classify a list of Feature points against the fitted floor plane.
@@ -77,8 +78,12 @@ def classify_features(
     orig_shape     : (H, W) of the original image.
     contact_thresh : |depth_diff| <= this  →  CONTACT.
     close_thresh   : depth_diff <= this    →  CLOSE  (otherwise SAFE).
+    floor_normal_z : Optional floor-normal z component. When provided, the
+                     depth difference is scaled by |floor_normal_z| so the
+                     threshold tracks floor tilt relative to the optic axis.
     """
     results: list[FeatureResult] = []
+    diff_scale = abs(float(floor_normal_z)) if floor_normal_z is not None else 1.0
 
     orig_h, orig_w = orig_shape
     dh, dw = depth_map.shape[:2]
@@ -102,7 +107,7 @@ def classify_features(
         inv_d    = alpha * x_d + beta * y_d + gamma
         expected = 1.0 / inv_d if inv_d > 0 else float("inf")
         actual   = float(depth_map[y_d, x_d])
-        diff     = expected - actual  # positive → feature is in front of floor
+        diff     = (expected - actual) * diff_scale
 
         if abs(diff) <= contact_thresh:
             status = ContactStatus.CONTACT
