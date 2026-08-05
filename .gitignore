@@ -41,3 +41,6 @@ assets
 .pth
 *.pt
 *.pth
+surface_contact_exp/images
+surface_contact_exp/videos
+
